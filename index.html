@@ -1,0 +1,241 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8" />
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>AI‑Powered Task Prioritizer</title>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+  <div class="app" role="application">
+
+    <header>
+
+      <h1>AI‑Powered Task Prioritizer</h1>
+
+      <div class="controls">
+
+        <button class="btn" id="autoPrioritize">Auto‑Prioritize</button>
+
+        <button class="btn secondary" id="clearAll">Clear All</button>
+
+      </div>
+
+    </header>
+
+
+
+    <div class="grid">
+
+      <section class="panel">
+
+        <form id="taskForm">
+
+          <div class="row">
+
+            <div style="flex:1">
+
+              <label for="title">Task title</label>
+
+              <input id="title" type="text" placeholder="Write a short title (eg. Finish report)" required>
+
+            </div>
+
+            <div style="width:130px">
+
+              <label for="due">Due date</label>
+
+              <input id="due" type="date">
+
+            </div>
+
+          </div>
+
+
+
+          <div class="row">
+
+            <div style="flex:1">
+
+              <label for="desc">Description / notes</label>
+
+              <textarea id="desc" placeholder="Add details or context (you can write 'urgent', 'ASAP', or 'low priority')"></textarea>
+
+            </div>
+
+          </div>
+
+
+
+          <div class="row">
+
+            <div style="width:48%">
+
+              <label for="importance">Importance (0–10)</label>
+
+              <input id="importance" type="range" min="0" max="10" value="6" oninput="this.nextElementSibling.textContent=this.value">
+
+              <div style="font-size:12px;color:var(--muted)"><span>Value: </span><span>6</span></div>
+
+            </div>
+
+            <div style="width:48%">
+
+              <label for="urgency">Urgency (0–10)</label>
+
+              <input id="urgency" type="range" min="0" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value">
+
+              <div style="font-size:12px;color:var(--muted)"><span>Value: </span><span>5</span></div>
+
+            </div>
+
+          </div>
+
+
+
+          <div class="row">
+
+            <div style="width:50%">
+
+              <label for="effort">Estimated effort (hours)</label>
+
+              <input id="effort" type="number" min="0" step="0.25" value="1">
+
+            </div>
+
+            <div style="width:50%">
+
+              <label for="category">Category</label>
+
+              <select id="category"><option>General</option><option>Work</option><option>Personal</option><option>Health</option><option>Learning</option></select>
+
+            </div>
+
+          </div>
+
+
+
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+
+            <button class="btn" type="submit">Add task</button>
+
+            <button class="btn secondary" type="button" id="suggestBtn">Smart Suggest</button>
+
+            <div style="flex:1;text-align:right;color:var(--muted);font-size:13px">Local only — no servers</div>
+
+          </div>
+
+        </form>
+
+
+
+        <hr style="border:none;height:10px">
+
+        <div>
+
+          <label style="display:block;margin-bottom:8px;color:var(--muted)">Tasks</label>
+
+          <div class="task-list" id="taskList" aria-live="polite"></div>
+
+        </div>
+
+      </section>
+
+
+
+      <aside class="right-col">
+
+        <div class="widget">
+
+          <h3 style="margin-top:0">Prioritization Summary</h3>
+
+          <div class="summary">
+
+            <div class="widget" style="flex:1">
+
+              <strong id="counts">0 tasks</strong>
+
+              <div style="font-size:13px;color:var(--muted);margin-top:6px">High / Medium / Low</div>
+
+              <div class="list-compact" style="margin-top:10px">
+
+                <div id="highCount">High: 0</div>
+
+                <div id="medCount">Medium: 0</div>
+
+                <div id="lowCount">Low: 0</div>
+
+              </div>
+
+            </div>
+
+            <div class="widget" style="flex:1">
+
+              <strong>Quick Tips</strong>
+
+              <ul style="margin:8px 0 0 18px;color:var(--muted);font-size:13px">
+
+                <li>AI suggests based on due date, importance, urgency, effort.</li>
+
+                <li>Use Smart Suggest to auto-tune sliders from the text.</li>
+
+                <li>Drag reorder is supported via Up/Down buttons.</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="widget">
+
+          <h3 style="margin-top:0">Auto Plan (1‑day blocks)</h3>
+
+          <div id="planArea" style="font-size:13px;color:var(--muted)">No plan yet — click Auto‑Prioritize.</div>
+
+        </div>
+
+
+
+        <div class="widget">
+
+          <h3 style="margin-top:0">Settings (weights)</h3>
+
+          <label style="font-size:13px;color:var(--muted)">Importance weight</label>
+
+          <input id="wImportance" type="range" min="0" max="5" step="0.1" value="1.6" oninput="updateWeights()">
+
+          <label style="font-size:13px;color:var(--muted)">Urgency weight</label>
+
+          <input id="wUrgency" type="range" min="0" max="5" step="0.1" value="2.2" oninput="updateWeights()">
+
+          <label style="font-size:13px;color:var(--muted)">Effort penalty (per hour)</label>
+
+          <input id="wEffort" type="range" min="0" max="2" step="0.05" value="0.25" oninput="updateWeights()">
+
+        </div>
+
+
+
+        <footer>Built with client-side heuristics (interpretable AI). Tasks saved to browser storage.</footer>
+
+      </aside>
+
+    </div>
+
+  </div>
+  </body>
+    <script src="script.js"></script>
+</html>
